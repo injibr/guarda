@@ -3,9 +3,11 @@ import { View, StyleSheet } from 'react-native';
 import { Linking } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// crypto.subtle shim for jsonld - must run before any SDK imports
+import './src/polyfills';
 
 import { handleDeepLink, PENDING_KEY } from './src/services/deepLinkHandler';
-import { VCSDK } from 'vc-sdk-headless';
+import { VCSDK } from '@br.gov.dataprev.inji/wallet-sdk';
 
 import Splash from './src/screens/Splash/Splash';
 import Login from './src/screens/Login/Login';
@@ -123,13 +125,13 @@ export default function App() {
     <SafeAreaProvider>
       <View style={styles.container}>
       {currentScreen !== 'Splash' && currentScreen !== 'Login' && currentScreen !== 'Consent' && currentScreen !== 'QrScanner' && (
-        <Header 
-          onNavigateAdd={() => navigateTo('AddDocument')} 
+        <Header
+          onNavigateAdd={() => navigateTo('AddDocument')}
           onNavigateSplash={() => navigateTo('Splash')}
-          onNavigateProfile={() => navigateTo('Profile')} 
+          onNavigateProfile={() => navigateTo('Profile')}
         />
       )}
-      
+     
       {currentScreen === 'Splash' && (
         <Splash onFinish={() => navigateTo('Home')} />
       )}
@@ -137,7 +139,7 @@ export default function App() {
       {currentScreen === 'Login' && (
         <Login onLogin={handleLogin} onBack={() => { setPendingScreen(null); navigateTo('Home'); }} />
       )}
-      
+     
       {currentScreen === 'Home' && (
         <Home
           sdkReady={sdkReady}
@@ -154,8 +156,8 @@ export default function App() {
       )}
 
       {currentScreen === 'DocumentDetail' && (
-        <DocumentDetail 
-          onBack={() => navigateTo('Home')} 
+        <DocumentDetail
+          onBack={() => navigateTo('Home')}
           credential={selectedCredential}
           onDelete={async (vcId) => {
             await VCSDK.credentials.delete(vcId);

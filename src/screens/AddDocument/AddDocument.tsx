@@ -39,7 +39,7 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
   const [showNoCredentialModal, setShowNoCredentialModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { sections, loading, reload } = useIssuers(sdkReady ?? false);
-  const { downloadCredential, downloading } = useWallet(sdkReady ?? false);
+  const { downloadCredential, downloadingId } = useWallet(sdkReady ?? false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const showError = (message: string) => {
@@ -61,26 +61,30 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
     }
   };
 
-  const renderItem = ({ item }: { item: DocumentItem }) => (
-    <Card
-      available
-      cardColor="#3B82F6"
-      disabled={downloading}
-      activeOpacity={0.7}
-      onPress={() => handleDownload(item.issuer, item.type)}
-    >
-      <CardLeft>
-        <CardIconContainer>
-          <Ionicons name="shield-checkmark" size={24} color="#FFF" />
-        </CardIconContainer>
-        <CardTitle numberOfLines={2}>{item.title}</CardTitle>
-      </CardLeft>
-      {downloading
-        ? <ActivityIndicator color="#FFF" size="small" />
-        : <CardAction>Adicionar</CardAction>
-      }
-    </Card>
-  );
+  const renderItem = ({ item }: { item: DocumentItem }) => {
+    const itemId = `${item.issuer?.id}-${item.type?.id}`;
+    const isDownloading = downloadingId === itemId;
+    return (
+      <Card
+        available
+        cardColor="#3B82F6"
+        disabled={downloadingId !== null}
+        activeOpacity={0.7}
+        onPress={() => handleDownload(item.issuer, item.type)}
+      >
+        <CardLeft>
+          <CardIconContainer>
+            <Ionicons name="shield-checkmark" size={24} color="#FFF" />
+          </CardIconContainer>
+          <CardTitle numberOfLines={2}>{item.title}</CardTitle>
+        </CardLeft>
+        {isDownloading
+          ? <ActivityIndicator color="#FFF" size="small" />
+          : <CardAction>Adicionar</CardAction>
+        }
+      </Card>
+    );
+  };
 
   const renderSectionHeader = (title: string) => (
     <Text style={{ fontSize: 13, fontWeight: '600', color: '#6B7280', marginBottom: 8, marginTop: 4 }}>

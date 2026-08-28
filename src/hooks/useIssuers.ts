@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { VCSDK } from 'vc-sdk-headless';
+import { VCSDK } from '@br.gov.dataprev.inji/wallet-sdk';
 
 interface CredentialType {
   id: string;

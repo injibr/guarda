@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { useWallet } from '../../hooks/useWallet';
 import { getAuthDataFromStorage } from '../../components/CustomAuthWebView/authStorage';
 import StackedCards from '../../components/StackedCards';
@@ -17,7 +17,7 @@ interface HomeProps {
 }
 
 export default function Home({ sdkReady, onNavigateAdd, onNavigateDocument, onNavigateQrScanner }: HomeProps) {
-  const { credentials, downloading } = useWallet(sdkReady ?? false);
+  const { credentials } = useWallet(sdkReady ?? false);
 
   useEffect(() => {
     getAuthDataFromStorage();
@@ -26,9 +26,7 @@ export default function Home({ sdkReady, onNavigateAdd, onNavigateDocument, onNa
   return (
     <>
       <View style={{ flex: 1 }}>
-        {downloading
-          ? <ActivityIndicator size="large" color="#4C1D95" style={{ marginTop: 40 }} />
-          : credentials.length === 0
+        {credentials.length === 0
             ? <EmptyState onNavigateAdd={onNavigateAdd} />
             : <StackedCards credentials={credentials} onNavigateDocument={onNavigateDocument} />
         }

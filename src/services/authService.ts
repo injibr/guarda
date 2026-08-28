@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto';
-import { VCSDK } from 'vc-sdk-headless';
+import { VCSDK } from '@br.gov.dataprev.inji/wallet-sdk';
 
 export interface PkceData {
   codeVerifier: string;

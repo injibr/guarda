@@ -58,6 +58,7 @@ function resolveIssuerName(vc: any): string {
 
 function resolveCredentialType(vc: any): string {
   const types: string[] = vc?.type || [];
+  if (types.includes('mso_mdoc') || vc?.metadata?.credentialType?.format === 'mso_mdoc') return 'mDoc';
   if (types.includes('CAFCredential')) return 'CAF';
   if (types.includes('CARReceipt')) return 'CAR';
   if (types.includes('CCIRCredential')) return 'CCIR';
@@ -135,6 +136,23 @@ function CCIRSection({ subject }: { subject: any }) {
   );
 }
 
+function MdocSection({ vc }: { vc: any }) {
+  const doctype = vc?.metadata?.credentialType?.doctype
+    || vc?.metadata?.credentialType?.fullConfig?.doctype
+    || vc?.type?.find((t: string) => t !== 'mso_mdoc')
+    || 'br.gov.mgi.eca';
+  return (
+    <>
+      <SectionTitle>Documento Digital (mDoc)</SectionTitle>
+      <InfoCard>
+        <InfoRow><InfoLabel>Formato</InfoLabel><InfoValue>ISO 18013 mDoc</InfoValue></InfoRow>
+        <InfoRow bordered><InfoLabel>Doctype</InfoLabel><InfoValue>{doctype}</InfoValue></InfoRow>
+        <InfoRow bordered><InfoLabel>Armazenamento</InfoLabel><InfoValue>CBOR base64url</InfoValue></InfoRow>
+      </InfoCard>
+    </>
+  );
+}
+
 function CAFSection({ subject }: { subject: any }) {
   return (
     <>
@@ -201,6 +219,7 @@ export default function DocumentDetail({ onBack, credential, onDelete }: Documen
       </Header>
 
       <ScrollContent>
+        {credType === 'mDoc' && <MdocSection vc={vc} />}
         {credType === 'Maioridade' && <AgeSection subject={subject} />}
 
         <SectionTitle>Informações da Credencial</SectionTitle>

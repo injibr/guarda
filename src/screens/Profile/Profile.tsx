@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { VCSDK } from 'vc-sdk-headless';
+import { VCSDK } from '@br.gov.dataprev.inji/wallet-sdk';
 import ClearCredentialsModal from '../../components/ClearCredentialsModal';
 import { useAuthStore } from '../../store/authStore';
 import SuccessModal from '../../components/SuccessModal';

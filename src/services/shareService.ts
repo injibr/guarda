@@ -1,6 +1,6 @@
 import { Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { VCSDK } from 'vc-sdk-headless';
+import { VCSDK } from '@br.gov.dataprev.inji/wallet-sdk';
 import { PENDING_KEY } from './deepLinkHandler';
 
 interface ResolvedCredential {

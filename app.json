@@ -56,7 +56,7 @@
       "expo-secure-store",
       "./plugins/withReleaseSigning",
       "./plugins/withNetworkSecurity",
-      "vc-sdk-headless"
+      "./plugins/withMavenRepositories"
     ],
     "extra": {
       "eas": {

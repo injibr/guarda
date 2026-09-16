@@ -3,10 +3,6 @@ import { jwtDecode } from 'jwt-decode';
 
 export const PENDING_KEY = 'pending_deep_link';
 
-const VERIFY_BASE_URL = process.env.EXPO_PUBLIC_VERIFY_BASE_URL!;
-const RESPONSE_URI = `${VERIFY_BASE_URL}/v1/verify/vp-submission/direct-post`;
-const CLIENT_NAME = process.env.EXPO_PUBLIC_CLIENT_NAME!;
-
 interface PresentationDefinition {
   id: string;
   input_descriptors: any[];
@@ -47,19 +43,12 @@ const DEFAULT_PRESENTATION_DEFINITION: PresentationDefinition = {
   }],
 };
 
-const BASE_SHARE_PARAMS = {
-  response_type: 'vp_token',
-  client_id: VERIFY_BASE_URL,
-  redirect_uri: RESPONSE_URI,
-  response_mode: 'direct_post',
-  client_metadata: JSON.stringify({ client_name: CLIENT_NAME }),
-};
-
 function buildShareUrl(requestId: string, nonce: string, presentationDefinition: PresentationDefinition, responseUri?: string, clientId?: string): string {
   const params = new URLSearchParams({
-    ...BASE_SHARE_PARAMS,
-    client_id: clientId ?? BASE_SHARE_PARAMS.client_id,
-    redirect_uri: responseUri || RESPONSE_URI,
+    response_type: 'vp_token',
+    response_mode: 'direct_post',
+    client_id: clientId ?? '',
+    redirect_uri: String(responseUri),
     presentation_definition: JSON.stringify(presentationDefinition),
     nonce,
     state: requestId,
@@ -73,10 +62,11 @@ async function resolveShareUrlFromRequestUri(requestUri: string): Promise<{ url:
   const payload = jwtDecode<any>(jwt);
 
   const pd: PresentationDefinition = payload.presentation_definition ?? DEFAULT_PRESENTATION_DEFINITION;
-  const redirectUri = payload.response_uri ?? payload.redirect_uri ?? RESPONSE_URI;
+  const redirectUri = payload.response_uri ?? payload.redirect_uri;
   const params = new URLSearchParams({
-    ...BASE_SHARE_PARAMS,
-    client_id: payload.client_id ?? BASE_SHARE_PARAMS.client_id,
+    response_type: 'vp_token',
+    response_mode: 'direct_post',
+    client_id: payload.client_id ?? '',
     redirect_uri: redirectUri,
     presentation_definition: JSON.stringify(pd),
     nonce: payload.nonce ?? '',

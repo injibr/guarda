@@ -28,7 +28,7 @@ import {
 interface DocumentDetailProps {
   onBack: () => void;
   credential: any;
-  onDelete: (vcId: string) => Promise<void>;
+  onDelete: (vcId: string, isMdoc?: boolean) => Promise<void>;
 }
 
 interface AgeInfo {
@@ -193,6 +193,7 @@ function CAFSection({ subject }: { subject: any }) {
 }
 
 export default function DocumentDetail({ onBack, credential, onDelete }: DocumentDetailProps) {
+  const isMdoc = credential?.isMdoc === true || credential?.vc?.format === 'mso_mdoc';
   const vc = credential?.vc || {};
   const subject = vc.credentialSubject || {};
   const credType = resolveCredentialType(vc);
@@ -200,7 +201,7 @@ export default function DocumentDetail({ onBack, credential, onDelete }: Documen
 
   const handleDelete = async () => {
     try {
-      await onDelete(credential?.vc?.id ?? credential?.id);
+      await onDelete(credential?.vc?.id ?? credential?.id, isMdoc);
       setShowDeleteModal(false);
       onBack();
     } catch {

@@ -10,6 +10,7 @@ interface ResolvedCredential {
   name: string;
   system: string;
   issuerId: string;
+  disclosurePaths?: string[];
 }
 
 interface PendingShare {
@@ -31,14 +32,21 @@ function resolveCredentials(requestedCredentials: ResolvedCredential[], authRequ
   if (requestedCredentials.length > 0) return requestedCredentials;
 
   const descriptors: any[] = authRequest.presentation_definition?.input_descriptors ?? [];
-  return descriptors.map((d) => ({
-    inputDescriptorId: d.id,
-    credentialTypeId: d.id,
-    type: extractTypeFromDescriptor(d),
-    name: d.name || d.id,
-    system: 'MGI',
-    issuerId: 'MGI',
-  }));
+  return descriptors.map((d) => {
+    const fields: any[] = d.constraints?.fields ?? [];
+    const disclosurePaths = fields
+      .filter((f: any) => !f.path?.includes('$.type'))
+      .flatMap((f: any) => f.path as string[]);
+    return {
+      inputDescriptorId: d.id,
+      credentialTypeId: d.id,
+      type: fields.find((f: any) => f.path?.includes('$.type'))?.filter?.pattern ?? d.id,
+      name: d.name || d.id,
+      system: 'MGI',
+      issuerId: 'MGI',
+      disclosurePaths: disclosurePaths.length > 0 ? disclosurePaths : undefined,
+    };
+  });
 }
 
 function isCredentialValid(vc: any, type: string): boolean {
@@ -65,7 +73,23 @@ async function downloadMissingCredentials(credentials: ResolvedCredential[]): Pr
 }
 
 async function sendPresentation(authRequest: any, credentials: ResolvedCredential[], pending: PendingShare): Promise<void> {
-  const result = await VCSDK.share.completeShare(authRequest, credentials);
+  let selectedDisclosuresByVcId: Record<string, string[]> | undefined;
+
+  const hasSdJwtFields = credentials.some((c) => c.disclosurePaths?.length);
+  if (hasSdJwtFields) {
+    const allVCs = await VCSDK.credentials.getAll();
+    selectedDisclosuresByVcId = {};
+    for (const cred of credentials) {
+      if (!cred.disclosurePaths?.length) continue;
+      const vc = allVCs.find((v: any) => {
+        const types: string[] = Array.isArray(v.type) ? v.type : [v.type];
+        return types.some((t) => t === cred.type || t?.includes(cred.type) || cred.type?.includes(t));
+      });
+      if (vc) selectedDisclosuresByVcId[vc.id] = cred.disclosurePaths;
+    }
+  }
+
+  const result = await VCSDK.share.completeShare(authRequest, credentials, selectedDisclosuresByVcId);
   await AsyncStorage.removeItem(PENDING_KEY);
 
   if (result.success && pending.origin) {

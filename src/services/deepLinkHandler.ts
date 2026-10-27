@@ -12,6 +12,9 @@ export interface RequestedField {
   id: string;
   name: string;
   type: string;
+  // paths dos campos SD-JWT pedidos pelo verifier (ex: ["$.cpf", "$.name"])
+  // vazio = ldp_vc ou sem restrição de campos específicos
+  disclosurePaths?: string[];
 }
 
 interface DeepLinkParams {

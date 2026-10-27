@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, ActivityIndicator, TouchableOpacity, Text, View } from 'react-native';
+import { FlatList, ActivityIndicator, TouchableOpacity, Text, View, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useIssuers } from '../../hooks/useIssuers';
 import { useWallet } from '../../hooks/useWallet';
@@ -47,10 +47,12 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
     setShowErrorModal(true);
   };
 
-  const handleDownload = async (issuer: any, type: any) => {
-    if (!isAuthenticated) return setShowNoCredentialModal(true);
+  const [pendingDownload, setPendingDownload] = useState<{ issuer: any; type: any } | null>(null);
+  const [idMatricula, setIdMatricula] = useState('');
+
+  const doDownload = async (issuer: any, type: any, credentialSubject: Record<string, string>) => {
     try {
-      await downloadCredential(issuer, type);
+      await downloadCredential(issuer, { ...type, credentialSubject });
       setShowSuccessModal(true);
     } catch (e: any) {
       if (e?.code === 'AUTH_REQUIRED') {
@@ -61,9 +63,25 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
     }
   };
 
+  const handleDownload = async (issuer: any, type: any) => {
+    if (!isAuthenticated) return setShowNoCredentialModal(true);
+    if (type.id === 'SGQPCursoCredential') {
+      setIdMatricula('');
+      setPendingDownload({ issuer, type });
+      return;
+    }
+    await doDownload(issuer, type, {});
+  };
+
+  const handleConfirmMatricula = async () => {
+    if (!pendingDownload) return;
+    const { issuer, type } = pendingDownload;
+    setPendingDownload(null);
+    await doDownload(issuer, type, { idMatricula: idMatricula.trim() });
+  };
+
   const renderItem = ({ item }: { item: DocumentItem }) => {
-    const itemId = `${item.issuer?.id}-${item.type?.id}`;
-    const isDownloading = downloadingId === itemId;
+    const isDownloading = downloadingId === item.id;
     return (
       <Card
         available
@@ -112,7 +130,7 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
             {sections.length > 1 && renderSectionHeader(section.title)}
             {section.data.map((type: any, i: number) =>
               renderItem({ item: {
-                id: `${section.issuer.id}-${i}`,
+                id: `${section.issuer.id}-${type.id}`,
                 title: type.name || type.id,
                 issuer: section.issuer,
                 type,
@@ -137,6 +155,32 @@ export default function AddDocument({ sdkReady, onBack, onLoginRequired }: AddDo
         onContinue={() => { setShowNoCredentialModal(false); onLoginRequired?.(); }}
         onDismiss={() => setShowNoCredentialModal(false)}
       />
+
+      <Modal visible={!!pendingDownload} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 24, width: '100%' }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>Certificado de Qualificação Profissional</Text>
+            <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 16 }}>Informe o número da matrícula do curso.</Text>
+            <TextInput
+              value={idMatricula}
+              onChangeText={setIdMatricula}
+              placeholder="Número da matrícula"
+              keyboardType="numeric"
+              style={{ borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12, fontSize: 15, marginBottom: 16 }}
+            />
+            <TouchableOpacity
+              onPress={handleConfirmMatricula}
+              disabled={!idMatricula.trim()}
+              style={{ backgroundColor: idMatricula.trim() ? '#3B82F6' : '#9CA3AF', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 8 }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '600' }}>Confirmar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPendingDownload(null)} style={{ alignItems: 'center', padding: 8 }}>
+              <Text style={{ color: '#6B7280' }}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <SuccessModal
         visible={showSuccessModal}

@@ -1,4 +1,5 @@
 import 'react-native-get-random-values';
+import './src/clusterUrlPatch';
 import './ReactotronConfig';
 import { registerRootComponent } from 'expo';
 

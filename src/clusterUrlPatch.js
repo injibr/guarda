@@ -5,13 +5,16 @@ const URL_MAP = {
   'wiremock-inji-eca.inji-local.svc.cluster.local:8080': `${CLUSTER_HOST}:30093`,
   'wiremock-inji.inji-local.svc.cluster.local': `${CLUSTER_HOST}:30093`,
   'inji-verify-service.inji-local.svc.cluster.local': `${CLUSTER_HOST}:30091`,
+  'injiverify.localhost': `${CLUSTER_HOST}:30091`,
 };
 
 const patchUrl = (url) => {
   if (typeof url !== 'string') return url;
   let patched = url;
   for (const [cluster, local] of Object.entries(URL_MAP)) {
-    patched = patched.replace(cluster, local);
+    if (patched.includes(cluster)) {
+      patched = patched.replace(cluster, local).replace('https://', 'http://');
+    }
   }
   return patched;
 };
